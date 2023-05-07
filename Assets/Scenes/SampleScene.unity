@@ -292,8 +292,4 @@ MonoBehaviour:
   xCount: 9
   yCount: 15
   changeInPosition: {x: 0, y: 0}
-  newTile:
-    gameObject: {fileID: 0}
-    postion: {x: 0, y: 0}
-    gridPosition: {x: 0, y: 0}
   level: 0.1
