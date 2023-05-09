@@ -292,4 +292,4 @@ MonoBehaviour:
   xCount: 9
   yCount: 15
   changeInPosition: {x: 0, y: 0}
-  level: 0.1
+  level: 0.01
