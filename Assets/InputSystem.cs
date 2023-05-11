@@ -53,6 +53,15 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Up"",
+                    ""type"": ""Button"",
+                    ""id"": ""abe16c11-c61e-4e9f-b67f-0c880c4fe7e7"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -88,6 +97,17 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
                     ""action"": ""Down"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3e70f89e-1934-4791-b280-e88cb6c9e833"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -99,6 +119,7 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
         m_PlayerActionMap_Left = m_PlayerActionMap.FindAction("Left", throwIfNotFound: true);
         m_PlayerActionMap_Right = m_PlayerActionMap.FindAction("Right", throwIfNotFound: true);
         m_PlayerActionMap_Down = m_PlayerActionMap.FindAction("Down", throwIfNotFound: true);
+        m_PlayerActionMap_Up = m_PlayerActionMap.FindAction("Up", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -161,6 +182,7 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActionMap_Left;
     private readonly InputAction m_PlayerActionMap_Right;
     private readonly InputAction m_PlayerActionMap_Down;
+    private readonly InputAction m_PlayerActionMap_Up;
     public struct PlayerActionMapActions
     {
         private @InputSystem m_Wrapper;
@@ -168,6 +190,7 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
         public InputAction @Left => m_Wrapper.m_PlayerActionMap_Left;
         public InputAction @Right => m_Wrapper.m_PlayerActionMap_Right;
         public InputAction @Down => m_Wrapper.m_PlayerActionMap_Down;
+        public InputAction @Up => m_Wrapper.m_PlayerActionMap_Up;
         public InputActionMap Get() { return m_Wrapper.m_PlayerActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -186,6 +209,9 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
                 @Down.started -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnDown;
                 @Down.performed -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnDown;
                 @Down.canceled -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnDown;
+                @Up.started -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnUp;
+                @Up.performed -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnUp;
+                @Up.canceled -= m_Wrapper.m_PlayerActionMapActionsCallbackInterface.OnUp;
             }
             m_Wrapper.m_PlayerActionMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -199,6 +225,9 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
                 @Down.started += instance.OnDown;
                 @Down.performed += instance.OnDown;
                 @Down.canceled += instance.OnDown;
+                @Up.started += instance.OnUp;
+                @Up.performed += instance.OnUp;
+                @Up.canceled += instance.OnUp;
             }
         }
     }
@@ -208,5 +237,6 @@ public partial class @InputSystem : IInputActionCollection2, IDisposable
         void OnLeft(InputAction.CallbackContext context);
         void OnRight(InputAction.CallbackContext context);
         void OnDown(InputAction.CallbackContext context);
+        void OnUp(InputAction.CallbackContext context);
     }
 }

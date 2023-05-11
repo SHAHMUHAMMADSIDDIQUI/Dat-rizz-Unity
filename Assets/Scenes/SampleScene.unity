@@ -286,10 +286,12 @@ MonoBehaviour:
   gridTile: {fileID: 6285253878792995085, guid: c80ccbb8b28f8404db2c5c3ba77cff30, type: 3}
   piece: {fileID: 2762420506875312660, guid: 69d574d01ad4ca0408cb9e304db34772, type: 3}
   gridClass:
+    piece: 0
     x: []
   newPiece:
+    piece: 0
     x: []
   xCount: 9
   yCount: 15
   changeInPosition: {x: 0, y: 0}
-  level: 0.01
+  level: 50
