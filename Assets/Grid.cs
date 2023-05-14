@@ -68,59 +68,46 @@ public class Grid : MonoBehaviour
         Vector2 newGridPositon;
         GetPieceInGrid((Piece)Random.Range(0, Enum.GetNames(typeof(Piece)).Length), out grid, out newGridPositon);
         newPiece = grid;
-        gridClass.AddGrid(grid);
+        gridClass.AddGrid(grid,newGridPositon);
 
     }
 
     public void RotatePiece()
     {
+        gridClass.RemovePiecePosition(newPiece);
+        XAxis rot = new XAxis(newPiece.x[0].y.Length,newPiece.x.Length);
+        
         if (newPiece != null)
         {
-            XAxis rotatedPiece = new(newPiece.x[0].y.Length, newPiece.x.Length);
+
+
             
-            for (int i = 0; i < newPiece.x.Length; i++)
+            for (int x = 0; x < newPiece.x.Length; x++)
             {
-                for (int j = 0; j < newPiece.x[i].y.Length; j++)
+                for (int y = 0; y < newPiece.x[x].y.Length; y++)
                 {
-                    rotatedPiece.x[j].y[i] = newPiece.x[i].y[j];
-                    if (i != j)
-                    {
-                        rotatedPiece.x[j].y[i].gridPosition.x -= j;
-                        rotatedPiece.x[j].y[i].gridPosition.y += i;
-                    }             
-                }
-            }
-            foreach (var item in newPiece.x)
-            {
-                foreach (var item2 in item.y)
-                {
-                    Debug.Log(item2.gridPosition);
-                    gridClass.GetTile(item2.gridPosition).gameObject = null;
 
+                    rot.x[y].y[x].gameObject = newPiece.x[x].y[y].gameObject;
                 }
             }
-            newPiece = rotatedPiece;
-            foreach (var item in rotatedPiece.x)
-            {
-                foreach (var item2 in item.y)
-                {
-                    if (item2.gameObject != null)
-                    {
-                        gridClass.SetTilePosition(item2);
 
-                    }
-                }
-            }
-          
+
+            gridClass.AddGrid(rot, newPiece.x[0].y[0].gridPosition);
+            newPiece = rot;
+
         }
+
     }
     private void GetPieceInGrid(Piece pieceType, out XAxis grid, out Vector2 newGridPositon)
     {
-        grid = new(2, 1);
+        grid = new(3, 2);
         newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
         grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
         grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-        grid.piece = Piece.zeroByThree;
+        grid.SetGOAndGridPositionByIndex(new Vector2(2, 0), Instantiate(piece), newGridPositon);
+        grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
+        grid.piece = pieceType;
+
         return;
         switch (pieceType)
         {
@@ -246,6 +233,20 @@ public class Grid : MonoBehaviour
 [System.Serializable]
 public class XAxis
 {
+    public void RemovePiecePosition(XAxis piece)
+    {
+        
+        for (int i = 0; i < x.Length; i++)
+        {
+            for (int j = 0; j < x[i].y.Length; j++)
+            {
+                if (x[i].y[j].gameObject != null )
+                {
+                    GetTile(x[i].y[j].gridPosition).gameObject = null;
+                }
+            }
+        }
+    }
     public Vector2 GetPosition(Vector2 gridPosition)
     {
         return x[(int)gridPosition.x].y[(int)gridPosition.y].postion;
@@ -262,23 +263,19 @@ public class XAxis
 
         return GetTile(gridPosition).gameObject == null || newPiece.x.ToList().Exists(x => x.y.ToList().Exists(y => y.gameObject == GetTile(gridPosition).gameObject));
     }
-    public void AddGrid(XAxis newGrid)
+    public void AddGrid(XAxis newGrid,Vector2 newGridPosition)
     {
-        foreach (var item in newGrid.x)
+        for (int i = 0; i < newGrid.x.Length; i++)
         {
-
-            foreach (var item1 in item.y)
+            for (int j = 0; j < newGrid.x[i].y.Length; j++)
             {
-                if (item1.gameObject == null)
-                {
-                    continue;
-                }
-                if (GetTile(item1.GridPosition).gameObject != null)
+                if (GetTile(newGrid.x[i].y[j].GridPosition).gameObject != null)
                 {
                     Debug.Log("Game Over");
                 }
-                GetTile(item1.GridPosition).gameObject = item1.gameObject;
-                SetTilePosition(item1);
+                newGrid.x[i].y[j].gridPosition = newGridPosition + Vector2.right * i - Vector2.down * j;
+                GetTile(newGrid.x[i].y[j].GridPosition).gameObject = newGrid.x[i].y[j].gameObject;
+                SetTilePosition(newGrid.x[i].y[j]);
             }
         }
     }
@@ -286,40 +283,39 @@ public class XAxis
     {
         x[(int)index.x].y[(int)index.y].gameObject = go;
         x[(int)index.x].y[(int)index.y].GridPosition = gridPositon + index;
+    }  public void SetGOAndGridPosition(Tile tile)
+    {
+        GetTile(tile.gridPosition).gameObject = tile.gameObject;
+        SetTilePosition(tile);
     }
     public void ChangePiecePosition(Vector2 oldPosition, Vector2 change)
     {
 
+
         Tile oldTile = GetTile(oldPosition);
         Tile newTile = GetTile(oldPosition + change);
-        Debug.Log(oldTile.gameObject);
-        Debug.Log(oldTile.GridPosition);
-        Debug.Log(newTile.gameObject);
-        Debug.Log(newTile.GridPosition);
-
+       
         newTile.gameObject = oldTile.gameObject;
         oldTile.gameObject = null;
 
         SetTilePosition(newTile);
-        Debug.Log(oldTile.gameObject);
-        Debug.Log(oldTile.GridPosition);
-        Debug.Log(newTile.gameObject);
-        Debug.Log(newTile.GridPosition);
-    }
+         }
     public void SetTilePosition(Tile tile)
     {
+        if (tile.gameObject == null)
+        {
+            return;
+        }
         var obj = GetTile(tile.GridPosition).gameObject;
-        
-        obj.transform.position = GetPosition(tile.GridPosition);
+               obj.transform.position = GetPosition(tile.GridPosition);
         obj.transform.Translate(Vector3.back * 1);
         tile.gameObject.name = tile.GridPosition.ToString();
-
-
     }
 
     public bool SetPieceDirection(XAxis piece, Direction direction)
     {
 
+       
         foreach (var item in piece.x)
         {
             foreach (var item2 in item.y)
@@ -354,10 +350,10 @@ public class XAxis
             {
                 foreach (var item2 in item.y)
                 {
-                    if (item2.gameObject == null)
+                   /* if (item2.gameObject == null)
                     {
                         continue;
-                    }
+                    }*/
                     ChangePiecePosition(item2.GridPosition, Vector2.right);
                     item2.GridPosition += Vector2.right;
 
@@ -372,10 +368,10 @@ public class XAxis
                 foreach (var item2 in item.y)
                 {
 
-                    if (item2.gameObject == null)
+                  /*  if (item2.gameObject == null)
                     {
                         continue;
-                    }
+                    }*/
                     Vector2 change;
                     switch (direction)
                     {
