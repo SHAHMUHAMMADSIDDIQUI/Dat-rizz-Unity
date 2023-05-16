@@ -288,10 +288,26 @@ MonoBehaviour:
   gridClass:
     piece: 0
     x: []
+    xCount: 0
+    yCount: 0
   newPiece:
     piece: 0
     x: []
-  xCount: 9
-  yCount: 15
+    xCount: 0
+    yCount: 0
+  xCount: 10
+  yCount: 17
   changeInPosition: {x: 0, y: 0}
   level: 1
+  colors:
+  - {r: 1, g: 0, b: 0, a: 1}
+  - {r: 0.98620903, g: 1, b: 0, a: 1}
+  - {r: 0.33154273, g: 1, b: 0, a: 1}
+  - {r: 0.009789959, g: 0.41509432, b: 0.12284081, a: 1}
+  - {r: 0, g: 1, b: 0.92939377, a: 1}
+  - {r: 0, g: 0.45574713, b: 1, a: 1}
+  - {r: 0, g: 0.1215651, b: 1, a: 1}
+  - {r: 0.40164393, g: 0.28368637, b: 0.7075472, a: 1}
+  - {r: 0.77765703, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0, b: 0.67745495, a: 1}
+  - {r: 1, g: 0.38141876, b: 0, a: 1}
