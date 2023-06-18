@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 public class Grid : MonoBehaviour
 {
 
+    [TextArea(30, 50)]
+    public string fen;
     public GameObject gridTile, piece;
     public XAxis gridClass;
     public XAxis newPiece;
@@ -17,6 +20,12 @@ public class Grid : MonoBehaviour
     public List<Color> colors;
     public InputSystem inputSystem;
     public InputSystem.IPlayerActionMapActions playerAction;
+    bool isPaused;
+    float pressedTimeCooldown, pressTimeCooldownTotal = .2f;
+    bool isPressed,isRotated;
+    float touchThreshold = 0.1f;
+
+    Vector2 lastSwipe;
     private void Awake()
     {
         inputSystem = new();
@@ -32,21 +41,117 @@ public class Grid : MonoBehaviour
     private void OnEnable()
     {
         inputSystem.Enable();
-        inputSystem.PlayerActionMap.Left.started += OnInputLeft;
+        /*inputSystem.PlayerActionMap.Left.started += OnInputLeft;
         inputSystem.PlayerActionMap.Right.started += OnInputRight;
         inputSystem.PlayerActionMap.Down.started += OnInputDown;
-        inputSystem.PlayerActionMap.Up.started += OnInputUp;
+        inputSystem.PlayerActionMap.Up.started += OnInputUp;*/
         inputSystem.PlayerActionMap.Space.started += OnInputSpace;
+        inputSystem.PlayerActionMap.TouchContact.started+= ctx => { isPressed = true; };
+        inputSystem.PlayerActionMap.TouchContact.canceled+= ctx => { isPressed = false;isRotated = false; };
     }
-       private void OnInputSpace(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    private void Update()
     {
-        bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.down, true);
-        if (deadEnd)
+        if (pressedTimeCooldown <= 0)
         {
-            newPiece = null;
-            IsLayerCompleted();
-            Instantiate();
+
+            if (inputSystem.PlayerActionMap.Left.IsPressed())
+            {
+                Move(Vector2.left);
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+            }
+            else if (inputSystem.PlayerActionMap.Right.IsPressed())
+            {
+                Move(Vector2.right);
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+
+            }
+            else if (inputSystem.PlayerActionMap.Down.IsPressed())
+            {
+                Move(Vector2.down);
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+
+            }
+            else if (inputSystem.PlayerActionMap.Up.IsPressed())
+            {
+                Move(Vector2.up);
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+            }
+            else if (isPressed)
+            {
+                //Debug.Log("pressed");
+                var tempPos = inputSystem.PlayerActionMap.Touch.ReadValue<Vector2>();
+                if (tempPos != Vector2.zero)
+                {
+                Debug.Log(tempPos);
+
+                }
+                if (tempPos!= Vector2.zero)
+                {
+                    lastSwipe = tempPos;
+                    if (lastSwipe.x > touchThreshold)
+                    {
+                        lastSwipe.x = 1;
+
+                    }
+                    else if (lastSwipe.x < -touchThreshold)
+                    {
+                        lastSwipe.x = -1;
+
+
+                    }
+                    else
+                    {
+                        lastSwipe.x = 0;
+                    }
+                     if (lastSwipe.y > touchThreshold )
+                    {
+
+                        lastSwipe.y = 1;
+
+                    }
+
+                    else if (lastSwipe.y < -touchThreshold)
+                    {
+
+                        lastSwipe.y = -1;
+
+                    }
+                    else
+                    {
+                        lastSwipe.y = 0;
+
+                    }
+                }
+                if (isRotated && lastSwipe.y>0)
+                {
+                    lastSwipe.y = 0;
+                }
+
+                else if (lastSwipe.y > 0 && !isRotated)
+                {
+                    isRotated = true;                   
+
+                }
+                Move(lastSwipe);
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+
+            }
         }
+        if(pressedTimeCooldown>0)
+        {
+
+            pressedTimeCooldown -= Time.deltaTime;
+                   
+        }    }
+    private void OnInputSpace(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    {
+        Move(Vector2.down,infinity:true);
+
     }
     private void OnInputUp(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
@@ -55,41 +160,90 @@ public class Grid : MonoBehaviour
 
     private void OnInputRight(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        gridClass.ChangePiecePositionBy1(newPiece, Vector2.right);
+        Move(Vector2.right);
+
     }
 
     private void OnInputLeft(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        gridClass.ChangePiecePositionBy1(newPiece, Vector2.left);
+        Move(Vector2.left);
+
     }
 
     private void OnInputDown(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
-        bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.down);
-        if (deadEnd)
-        {
-            newPiece = null;
-            IsLayerCompleted();
-
-            Instantiate();
-        }
+        Move(Vector2.down);
     }
+    public void Move(Vector2 direction,bool infinity = false)
+    {
+        if (direction.y>0)
+        {
+            RotatePiece();
+            
+        }
+        //Debug.Log(direction);
+
+        if (direction.x!=0)
+        {
+            bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.right *direction.x, infinity: infinity);
+           
+        }
+        if (direction.y<0)
+        {
+            bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.up * direction.y  , infinity: infinity);
+
+            if ( deadEnd)
+            {
+                newPiece = null;
+                StartCoroutine(IsLayerCompleted());
+            }
+        }
+             
+    }
+    public void SetFen()
+    {
+        fen = "";
+        for (int i = yCount - 1; i >= 0; i--)
+        {
+            for (int j = 0; j < xCount; j++)
+            {
+                if (gridClass.x[j].y[i].gameObject != null)
+                {
+                    fen += "#";
+                }
+                else
+                {
+                    fen += " .";
+
+                }
+
+            }
+
+            fen += "\n";
+        }
+
+    }
+
     IEnumerator ChangePositonByTime()
     {
         while (true)
         {
             yield return new WaitForSeconds(level);
-
+            while(isPaused)
+            {
+                yield return null;
+            }
+        
             if (newPiece != null)
             {
                 bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.down);
                 if (deadEnd)
                 {
                     newPiece = null;
-                    IsLayerCompleted();
-                    Instantiate();
+                    StartCoroutine(IsLayerCompleted());
                 }
             }
+            SetFen();
         }
     }
 
@@ -171,11 +325,18 @@ public class Grid : MonoBehaviour
             print(grid.xCount + " " + xCount);
             print(grid.yCount + " " + yCount);
             print("game over");
+            RestartGame();
         }
+    }
+
+    private void RestartGame()
+    {
+        SceneManager.LoadScene(0);    
     }
 
     public void RotatePiece()
     {
+
         if (newPiece != null)
         {
             XAxis rot = new XAxis(newPiece.x[0].y.Length, newPiece.x.Length);
@@ -191,13 +352,15 @@ public class Grid : MonoBehaviour
                 }
                 xx--;
             }
+
+            
             gridClass.OnlyAssignGridPosition(rot, newPiece.x[0].y[0].gridPosition);
             if (gridClass.IsSpaceAvailable(rot))
             {
                 gridClass.AddGrid(rot, newPiece.x[0].y[0].gridPosition);
                 newPiece = rot;
             }
-
+           
             else
             {
 
@@ -298,12 +461,7 @@ public class Grid : MonoBehaviour
 
                 if (gridClass.GetTile(new Vector2(x, y)).gameObject == null)
                 {
-                    if (y<3)
-                    {
-                        Debug.Log($"break bc of {x}, {y}");
-                    }
-                    
-                    break;
+                                      break;
                 }
 
                 if (x == xCount - 1)
@@ -315,55 +473,84 @@ public class Grid : MonoBehaviour
         }
         return rowsIndex;
     }
-    void IsLayerCompleted()
+    IEnumerator IsLayerCompleted()
     {
 
 
         List<int> y = GetFilledRow();
-        foreach (var item in y)
+        isPaused = true;
+        if (y.Count>0)
         {
-            Debug.Log( $"filled at {item}");
-        }
-        foreach (var row in y)
-        {
-            for (int xx = 0; xx < gridClass.x.Length; xx++)
+            yield return new WaitForSeconds(0.3f);
+
+            int k = 0;
+
+            for (int i = 0; i < 6; i++)
             {
-
-                Destroy(gridClass.GetTile(new Vector2(xx, row)).gameObject.gameObject);
-
-                gridClass.GetTile(new Vector2(xx, row)).gameObject = null;
-
-                for (int yy= row; yy+1< yCount; yy++)
+                foreach (var row in y)
                 {
-                    gridClass.GetTile(new Vector2(xx, yy)).gameObject = gridClass.GetTile(new Vector2(xx, yy + 1)).gameObject;
+                    for (int xx = 0; xx < gridClass.x.Length; xx++)
+                    {
 
-                    gridClass.SetPosition(gridClass.GetTile(new Vector2(xx, yy)));
+                        var obj = gridClass.GetTile(new Vector2(xx, row - k)).gameObject.gameObject;
+
+                        obj.SetActive(!obj.activeInHierarchy);
+                    }
+                }
+                yield return new WaitForSeconds(0.3f);
+            }
+
+
+            foreach (var row in y)
+            {
+                for (int xx = 0; xx < gridClass.x.Length; xx++)
+                {
+
+                    Destroy(gridClass.GetTile(new Vector2(xx, row - k)).gameObject.gameObject);
+
+                    gridClass.GetTile(new Vector2(xx, row - k)).gameObject = null;
+
+                    for (int yy = row-k; yy + 1 < yCount; yy++)
+                    {
+                        gridClass.GetTile(new Vector2(xx, yy)).gameObject = gridClass.GetTile(new Vector2(xx, yy + 1)).gameObject;
+
+                        gridClass.SetPosition(gridClass.GetTile(new Vector2(xx, yy)));
+
+                    }
 
                 }
+                k++;
 
             }
-            
         }
-       /* if (y == -1)
-        {
-            return;
-        }
+        isPaused = false;
+        Instantiate();
 
-        for (int xx = 0; xx < gridClass.x.Length; xx++)
-        {
+        /* foreach (var item in y)
+         {
+             Debug.Log( $"filled at {item}");
+         }*/
 
-            Destroy(gridClass.GetTile(new Vector2(xx, y)).gameObject.gameObject);
+        /* if (y == -1)
+         {
+             return;
+         }
 
-            gridClass.GetTile(new Vector2(xx, y)).gameObject = null;
-            for (int yy = y + 1; yy < yCount; yy++)
-            {
-                gridClass.GetTile(new Vector2(xx, yy - 1)).gameObject = gridClass.GetTile(new Vector2(xx, yy)).gameObject;
+         for (int xx = 0; xx < gridClass.x.Length; xx++)
+         {
 
-                gridClass.SetPosition(gridClass.GetTile(new Vector2(xx, yy - 1)));
+             Destroy(gridClass.GetTile(new Vector2(xx, y)).gameObject.gameObject);
 
-            }
+             gridClass.GetTile(new Vector2(xx, y)).gameObject = null;
+             for (int yy = y + 1; yy < yCount; yy++)
+             {
+                 gridClass.GetTile(new Vector2(xx, yy - 1)).gameObject = gridClass.GetTile(new Vector2(xx, yy)).gameObject;
 
-        }*/
+                 gridClass.SetPosition(gridClass.GetTile(new Vector2(xx, yy - 1)));
+
+             }
+
+         }*/
         //IsLayerCompleted();
 
 
@@ -446,48 +633,31 @@ public class XAxis
         }
 
     }
-    public void AddGrid(XAxis newGrid, Vector2 newGridPosition, bool isRight = false)
+    public void AddGrid(XAxis newGrid, Vector2 newGridPosition)
     {
-        if (isRight)
+        for (int i = 0; i < newGrid.x.Length; i++)
         {
-            for (int i = newGrid.x.Length - 1; i >= 0; i--)
+            for (int j = 0; j < newGrid.x[i].y.Length; j++)
             {
-                for (int j = 0; j < newGrid.x[i].y.Length; j++)
+                if (GetTile(newGridPosition + Vector2.right * i - Vector2.down * j).gameObject != null && newGrid.x[i].y[j].gameObject != null)
                 {
-                    if (GetTile(newGrid.x[i].y[j].GridPosition).gameObject != null)
-                    {
-                        Debug.Log("Game Over");
+                    Debug.Log($"Game Over {i}, {j}");
 
-                        return;
-                    }
-                    newGrid.x[i].y[j].gridPosition = newGridPosition + Vector2.right * i - Vector2.down * j;
-                    GetTile(newGrid.x[i].y[j].GridPosition).gameObject = newGrid.x[i].y[j].gameObject;
 
-                    SetPosition(GetTile(newGrid.x[i].y[j].GridPosition));
+                    Time.timeScale = 0;
+                    return;
                 }
-            }
+                newGrid.x[i].y[j].gridPosition = newGridPosition + Vector2.right * i - Vector2.down * j;
 
-        }
-        else
-        {
-            for (int i = 0; i < newGrid.x.Length; i++)
-            {
-                for (int j = 0; j < newGrid.x[i].y.Length; j++)
+                if (newGrid.x[i].y[j].gameObject != null)
                 {
-                    if (GetTile(newGrid.x[i].y[j].GridPosition).gameObject != null)
-                    {
-                        Debug.Log("Game Over");
 
-                        return;
-                    }
-                    newGrid.x[i].y[j].gridPosition = newGridPosition + Vector2.right * i - Vector2.down * j;
                     GetTile(newGrid.x[i].y[j].GridPosition).gameObject = newGrid.x[i].y[j].gameObject;
-
-                    SetPosition(GetTile(newGrid.x[i].y[j].GridPosition));
                 }
+
+                SetPosition(GetTile(newGrid.x[i].y[j].GridPosition));
             }
         }
-
     }
     public void SetGOAndGridPositionByIndex(Vector2 index, GameObject go, Vector2 gridPositon)
     {
@@ -521,26 +691,7 @@ public class XAxis
         obj.transform.position = GetWorldPosition(tile.GridPosition);
         obj.transform.Translate(Vector3.back * 1);
         tile.gameObject.name = tile.GridPosition.ToString();
-        /* if (tile.gridPosition.y == 0)
-         {
-
-         tile.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
-         }
-         else if (tile.gridPosition.y == 1){
-         tile.gameObject.GetComponent<SpriteRenderer>().color = Color.red;
-
-         }
-         else if (tile.gridPosition.y == 2){
-         tile.gameObject.GetComponent<SpriteRenderer>().color = Color.green;
-
-         }else if (tile.gridPosition.y == 3){
-         tile.gameObject.GetComponent<SpriteRenderer>().color = Color.yellow;
-
-         }else if (tile.gridPosition.y == 4){
-         tile.gameObject.GetComponent<SpriteRenderer>().color = Color.grey;
-
-         }*/
-    }
+           }
 
    
 
@@ -582,7 +733,8 @@ public class XAxis
                 {
                     if (item2.GridPosition.x == x.Length - 1 || !IsTileNull(item2.gridPosition + Vector2.right))
                     {
-                        AddGrid(piece, piece.x[0].y[0].gridPosition, isRight: true);
+                        AddGrid(piece, piece.x[0].y[0].gridPosition);
+                        //Debug.Log("right not possible");
                         return true;
                     }
                 }
@@ -600,14 +752,7 @@ public class XAxis
         }
         
         
-        if (direction == Vector2.right)
-        {
-
-            AddGrid(piece, piece.x[0].y[0].gridPosition + direction, isRight: true);
-        }
-        else
-        {
-            AddGrid(piece, piece.x[0].y[0].gridPosition + direction);
+                  AddGrid(piece, piece.x[0].y[0].gridPosition + direction);
             if (infinity)
             {
                 bool deadEnd= ChangePiecePositionBy1(piece, direction, infinity: true);
@@ -615,8 +760,7 @@ public class XAxis
                 {
                 }*/
             }
-        }
-        return false;
+             return false;
     }
 
     public Piece piece;
