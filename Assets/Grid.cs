@@ -1,8 +1,11 @@
+using Crystal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class Grid : MonoBehaviour
@@ -22,10 +25,17 @@ public class Grid : MonoBehaviour
     public InputSystem.IPlayerActionMapActions playerAction;
     bool isPaused;
     float pressedTimeCooldown, pressTimeCooldownTotal = .2f;
+    float touchPressedTimeCooldown, touchPressTimeCooldownTotal = .8f;
     bool isPressed,isRotated;
     float touchThreshold = 0.1f;
+    public RectTransform safeArea;
+    public TextMeshProUGUI scoreTxt, highScoreTxt;
+    public int score, highScore;
 
+    public SafeArea safeAreaScript;
     Vector2 lastSwipe;
+    private float lastMovedTimeForTouch;
+
     private void Awake()
     {
         inputSystem = new();
@@ -33,6 +43,8 @@ public class Grid : MonoBehaviour
     }
     private void Start()
     {
+        highScore = PlayerPrefs.GetInt("datrizz");
+        highScoreTxt.text = "High Score : " + highScore;
         CreateGrid();
         newPiece = null;
         Instantiate();
@@ -48,9 +60,97 @@ public class Grid : MonoBehaviour
         inputSystem.PlayerActionMap.Space.started += OnInputSpace;
         inputSystem.PlayerActionMap.TouchContact.started+= ctx => { isPressed = true; };
         inputSystem.PlayerActionMap.TouchContact.canceled+= ctx => { isPressed = false;isRotated = false; };
+        inputSystem.PlayerActionMap.TouchPos.started += TouchPos;
+    }
+    private void TouchPos(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    {
+        if (Time.time < lastMovedTimeForTouch + 0.2f)
+        {
+            return;
+        }
+        lastMovedTimeForTouch = Time.time;
+        var dir = obj.ReadValue<Vector2>();
+        bool hor = false, vert = false;
+
+        if (dir.x > 0 || dir.x < 0)
+        {
+
+            hor = true;
+        }
+        if (dir.y > 0 || dir.y < 0)
+        {
+            vert = true;
+        }
+        if (vert && hor)
+        {
+            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+            {
+                if (dir.x > 0)
+                {
+                    lastSwipe = Vector2.right;
+
+
+                }
+                else
+                {
+                    lastSwipe = Vector2.left;
+
+
+                }
+            }
+            else
+            {
+                if (dir.y > 0)
+                {
+                    lastSwipe = Vector2.up;
+
+
+                }
+                else
+                {
+                    lastSwipe = Vector2.down;
+
+
+                }
+            }
+        }
+        else if (vert)
+        {
+            if (dir.y > 0)
+            {
+                lastSwipe = Vector2.up;
+
+            }
+            else
+            {
+                lastSwipe = Vector2.down;
+
+
+            }
+        }
+        else if (hor)
+        {
+            if (dir.x > 0)
+            {
+                lastSwipe = Vector2.right;
+
+            }
+            else
+            {
+                lastSwipe = Vector2.left;
+
+
+            }
+        }
+        Move(lastSwipe);
+
     }
     private void Update()
     {
+        if (pressedTimeCooldown>0)
+        {
+            pressedTimeCooldown -= Time.deltaTime;
+        }
         if (pressedTimeCooldown <= 0)
         {
 
@@ -63,8 +163,8 @@ public class Grid : MonoBehaviour
             else if (inputSystem.PlayerActionMap.Right.IsPressed())
             {
                 Move(Vector2.right);
-                pressedTimeCooldown = pressTimeCooldownTotal;
 
+                pressedTimeCooldown = pressTimeCooldownTotal;
 
             }
             else if (inputSystem.PlayerActionMap.Down.IsPressed())
@@ -80,74 +180,83 @@ public class Grid : MonoBehaviour
                 pressedTimeCooldown = pressTimeCooldownTotal;
 
             }
-            else if (isPressed)
-            {
-                //Debug.Log("pressed");
-                var tempPos = inputSystem.PlayerActionMap.Touch.ReadValue<Vector2>();
-                if (tempPos != Vector2.zero)
-                {
-                Debug.Log(tempPos);
-
-                }
-                if (tempPos!= Vector2.zero)
-                {
-                    lastSwipe = tempPos;
-                    if (lastSwipe.x > touchThreshold)
-                    {
-                        lastSwipe.x = 1;
-
-                    }
-                    else if (lastSwipe.x < -touchThreshold)
-                    {
-                        lastSwipe.x = -1;
 
 
-                    }
-                    else
-                    {
-                        lastSwipe.x = 0;
-                    }
-                     if (lastSwipe.y > touchThreshold )
-                    {
+            //else if (isPressed)
+            //{
+            //    Debug.Log("pressed");
+            //    var tempPos = inputSystem.PlayerActionMap.Touch.ReadValue<Vector2>();
+            //    if (tempPos != Vector2.zero)
+            //    {
+            //      Debug.Log(tempPos);
 
-                        lastSwipe.y = 1;
+            //    }
+            //    if (tempPos!= Vector2.zero)
+            //    {
+            //        lastSwipe = tempPos;
+            //        if (lastSwipe.x > touchThreshold)
+            //        {
+            //            lastSwipe.x = 1;
 
-                    }
-
-                    else if (lastSwipe.y < -touchThreshold)
-                    {
-
-                        lastSwipe.y = -1;
-
-                    }
-                    else
-                    {
-                        lastSwipe.y = 0;
-
-                    }
-                }
-                if (isRotated && lastSwipe.y>0)
-                {
-                    lastSwipe.y = 0;
-                }
-
-                else if (lastSwipe.y > 0 && !isRotated)
-                {
-                    isRotated = true;                   
-
-                }
-                Move(lastSwipe);
-                pressedTimeCooldown = pressTimeCooldownTotal;
+            //        }
+            //        else if (lastSwipe.x < -touchThreshold)
+            //        {
+            //            lastSwipe.x = -1;
 
 
-            }
+            //        }
+            //        else
+            //        {
+            //            lastSwipe.x = 0;
+            //        }
+            //         if (lastSwipe.y > touchThreshold )
+            //        {
+
+            //            lastSwipe.y = 1;
+
+            //        }
+
+            //        else if (lastSwipe.y < -touchThreshold)
+            //        {
+
+            //            lastSwipe.y = -1;
+
+            //        }
+            //        else
+            //        {
+            //            lastSwipe.y = 0;
+
+            //        }
+            //    }
+            //    if (isRotated && lastSwipe.y>0)
+            //    {
+            //        lastSwipe.y = 0;
+            //    }
+
+            //    else if (lastSwipe.y > 0 && !isRotated)
+            //    {
+            //        isRotated = true;                   
+
+            //    }
+            //    Move(lastSwipe);
+            //    pressedTimeCooldown = pressTimeCooldownTotal;
+
+
+            //}
         }
-        if(pressedTimeCooldown>0)
+        if (isPressed && touchPressedTimeCooldown<=0 && lastSwipe!=Vector2.up)
+        {
+            Move(lastSwipe);
+            touchPressedTimeCooldown= touchPressTimeCooldownTotal;
+
+        }
+        if (touchPressedTimeCooldown > 0)
         {
 
-            pressedTimeCooldown -= Time.deltaTime;
-                   
-        }    }
+            touchPressedTimeCooldown -= Time.deltaTime;
+
+        }
+    }
     private void OnInputSpace(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
         Move(Vector2.down,infinity:true);
@@ -229,6 +338,16 @@ public class Grid : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(level);
+            score++;
+            scoreTxt.text = "Score : " + score;
+
+            if (highScore<score)
+            {
+                highScore = score;
+                PlayerPrefs.SetInt("datrizz",highScore);
+                highScoreTxt.text = "High Score : " + highScore;
+
+            }
             while(isPaused)
             {
                 yield return null;
@@ -249,23 +368,29 @@ public class Grid : MonoBehaviour
 
     public void CreateGrid()
     {
-        float width = gridTile.transform.localScale.x, height = gridTile.transform.localScale.y;
-        changeInPosition = new Vector2(width, height);
+        //float width = gridTile.transform.localScale.x, height = gridTile.transform.localScale.y;
+        float height = safeAreaScript.GetSafeArea().yMax/(yCount+5);
+
+        Debug.Log(safeAreaScript.GetSafeArea().yMin);
+        piece.GetComponent<RectTransform>().sizeDelta = new Vector2(height, height);
+        gridTile.GetComponent<RectTransform>().sizeDelta = new Vector2(height, height);
+        changeInPosition = new Vector2(height, height);
 
         gridClass = new(xCount, yCount);
         for (int i = 0; i < gridClass.x.Length; i++)
         {
-            for (int j = gridClass.x[i].y.Length - 1; j >= 0; j--)
+            for (int j =0; j < gridClass.x[i].y.Length; j++)
             {
 
-                Vector2 position = new Vector2((i * width -
-                    gridClass.x.Length * width / 2) + width / 2,
+                Vector2 position = new Vector2((i * height -
+                    xCount * height / 2) + height / 2,
+                    //safeAreaScript.GetSafeArea().yMin-(j*height));
+                   //Screen.safeArea.yMax+(j*height));
+                (j * height - yCount * height / 2) + height / 2*-3);
+                //(j * height - yCount* height / 2) + height / 2);
 
-
-
-                    (j * height - gridClass.x[i].y.Length * height / 2) + height / 2);
-
-                Instantiate(gridTile, position, Quaternion.identity, transform);
+                var obj= Instantiate(gridTile, safeArea);
+                obj.GetComponent<RectTransform>().anchoredPosition = position;
                 gridClass.x[i].y[j].postion = position;
                 gridClass.x[i].y[j].GridPosition = new Vector2(i, j);
 
@@ -378,38 +503,38 @@ public class Grid : MonoBehaviour
             case Piece.zeroByThree:
                 grid = new(3, 1);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(2, 0), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(2, 0), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
                 break;
             case Piece.t:
                 grid = new(3, 2);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(2, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(2, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
                 break;
             case Piece.square:
                 grid = new(2, 2);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
                 break;
             case Piece.l:
                 grid = new(2, 3);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 2), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 2), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
 
@@ -417,10 +542,10 @@ public class Grid : MonoBehaviour
             case Piece.an1:
                 grid = new(2, 3);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 2), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 2), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
 
@@ -428,10 +553,10 @@ public class Grid : MonoBehaviour
             case Piece.an2:
                 grid = new(2, 3);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 2), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 2), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
 
@@ -439,10 +564,10 @@ public class Grid : MonoBehaviour
             default:
                 grid = new(2, 2);
                 newGridPositon = new Vector2(Random.Range(0, xCount - grid.x.Length + 1), yCount - grid.x[0].y.Length);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece), newGridPositon);
-                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 0), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(0, 1), Instantiate(piece, safeArea), newGridPositon);
+                grid.SetGOAndGridPositionByIndex(new Vector2(1, 1), Instantiate(piece, safeArea), newGridPositon);
                 grid.piece = pieceType;
 
                 break;
@@ -478,6 +603,15 @@ public class Grid : MonoBehaviour
 
 
         List<int> y = GetFilledRow();
+        score+= y.Count*10;
+        scoreTxt.text = "Score : " + score;
+        if (highScore < score)
+        {
+            highScore = score;
+            PlayerPrefs.SetInt("datrizz", highScore);
+            highScoreTxt.text = "High Score : " + highScore;
+
+        }
         isPaused = true;
         if (y.Count>0)
         {
@@ -688,7 +822,7 @@ public class XAxis
             return;
         }
         var obj = GetTile(tile.GridPosition).gameObject;
-        obj.transform.position = GetWorldPosition(tile.GridPosition);
+        obj.GetComponent<RectTransform>().anchoredPosition= GetWorldPosition(tile.GridPosition);
         obj.transform.Translate(Vector3.back * 1);
         tile.gameObject.name = tile.GridPosition.ToString();
            }
@@ -784,7 +918,7 @@ public class XAxis
             {
                 if (item1.gameObject!=null)
                 {
-                item1.gameObject.GetComponent<SpriteRenderer>().color = color;
+                item1.gameObject.GetComponent<Image>().color = color;
 
                 }
             }

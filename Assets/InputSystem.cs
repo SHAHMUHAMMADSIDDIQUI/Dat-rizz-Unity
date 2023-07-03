@@ -89,6 +89,15 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""TouchPos"",
+                    ""type"": ""Value"",
+                    ""id"": ""f42d7d8c-f1d6-4515-9262-3fa03810923f"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -168,6 +177,17 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""action"": ""TouchContact"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""26b5b1f2-f7c1-4666-8a67-b7533750223e"",
+                    ""path"": ""<Touchscreen>/primaryTouch/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TouchPos"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -183,6 +203,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         m_PlayerActionMap_Space = m_PlayerActionMap.FindAction("Space", throwIfNotFound: true);
         m_PlayerActionMap_Touch = m_PlayerActionMap.FindAction("Touch", throwIfNotFound: true);
         m_PlayerActionMap_TouchContact = m_PlayerActionMap.FindAction("TouchContact", throwIfNotFound: true);
+        m_PlayerActionMap_TouchPos = m_PlayerActionMap.FindAction("TouchPos", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -251,6 +272,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActionMap_Space;
     private readonly InputAction m_PlayerActionMap_Touch;
     private readonly InputAction m_PlayerActionMap_TouchContact;
+    private readonly InputAction m_PlayerActionMap_TouchPos;
     public struct PlayerActionMapActions
     {
         private @InputSystem m_Wrapper;
@@ -262,6 +284,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         public InputAction @Space => m_Wrapper.m_PlayerActionMap_Space;
         public InputAction @Touch => m_Wrapper.m_PlayerActionMap_Touch;
         public InputAction @TouchContact => m_Wrapper.m_PlayerActionMap_TouchContact;
+        public InputAction @TouchPos => m_Wrapper.m_PlayerActionMap_TouchPos;
         public InputActionMap Get() { return m_Wrapper.m_PlayerActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -292,6 +315,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @TouchContact.started += instance.OnTouchContact;
             @TouchContact.performed += instance.OnTouchContact;
             @TouchContact.canceled += instance.OnTouchContact;
+            @TouchPos.started += instance.OnTouchPos;
+            @TouchPos.performed += instance.OnTouchPos;
+            @TouchPos.canceled += instance.OnTouchPos;
         }
 
         private void UnregisterCallbacks(IPlayerActionMapActions instance)
@@ -317,6 +343,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @TouchContact.started -= instance.OnTouchContact;
             @TouchContact.performed -= instance.OnTouchContact;
             @TouchContact.canceled -= instance.OnTouchContact;
+            @TouchPos.started -= instance.OnTouchPos;
+            @TouchPos.performed -= instance.OnTouchPos;
+            @TouchPos.canceled -= instance.OnTouchPos;
         }
 
         public void RemoveCallbacks(IPlayerActionMapActions instance)
@@ -343,5 +372,6 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         void OnSpace(InputAction.CallbackContext context);
         void OnTouch(InputAction.CallbackContext context);
         void OnTouchContact(InputAction.CallbackContext context);
+        void OnTouchPos(InputAction.CallbackContext context);
     }
 }
