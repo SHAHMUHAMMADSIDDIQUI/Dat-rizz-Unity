@@ -26,8 +26,7 @@ public class Grid : MonoBehaviour
     bool isPaused;
     float pressedTimeCooldown, pressTimeCooldownTotal = .2f;
     float touchPressedTimeCooldown, touchPressTimeCooldownTotal = .8f;
-    bool isPressed,isRotated;
-    float touchThreshold = 0.1f;
+    bool isPressed;
     public RectTransform safeArea;
     public TextMeshProUGUI scoreTxt, highScoreTxt;
     public int score, highScore;
@@ -53,14 +52,13 @@ public class Grid : MonoBehaviour
     private void OnEnable()
     {
         inputSystem.Enable();
-        /*inputSystem.PlayerActionMap.Left.started += OnInputLeft;
-        inputSystem.PlayerActionMap.Right.started += OnInputRight;
-        inputSystem.PlayerActionMap.Down.started += OnInputDown;
-        inputSystem.PlayerActionMap.Up.started += OnInputUp;*/
+        
         inputSystem.PlayerActionMap.Space.started += OnInputSpace;
         inputSystem.PlayerActionMap.TouchContact.started+= ctx => { isPressed = true; };
-        inputSystem.PlayerActionMap.TouchContact.canceled+= ctx => { isPressed = false;isRotated = false; };
+        inputSystem.PlayerActionMap.TouchContact.canceled+= ctx => { isPressed = false; };
         inputSystem.PlayerActionMap.TouchPos.started += TouchPos;
+        inputSystem.PlayerActionMap.DoubleTap.performed += _ => { Move(Vector2.down, infinity: true); };
+
     }
     private void TouchPos(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
@@ -142,108 +140,49 @@ public class Grid : MonoBehaviour
 
             }
         }
+        Debug.Log(dir);
         Move(lastSwipe);
 
     }
     private void Update()
     {
-        if (pressedTimeCooldown>0)
-        {
-            pressedTimeCooldown -= Time.deltaTime;
-        }
-        if (pressedTimeCooldown <= 0)
-        {
+        //if (pressedTimeCooldown>0)
+        //{
+        //    pressedTimeCooldown -= Time.deltaTime;
+        //}
+        //if (pressedTimeCooldown <= 0)
+        //{
 
-            if (inputSystem.PlayerActionMap.Left.IsPressed())
-            {
-                Move(Vector2.left);
-                pressedTimeCooldown = pressTimeCooldownTotal;
+        //    if (inputSystem.PlayerActionMap.Left.IsPressed())
+        //    {
+        //        Move(Vector2.left);
+        //        pressedTimeCooldown = pressTimeCooldownTotal;
 
-            }
-            else if (inputSystem.PlayerActionMap.Right.IsPressed())
-            {
-                Move(Vector2.right);
+        //    }
+        //    else if (inputSystem.PlayerActionMap.Right.IsPressed())
+        //    {
+        //        Move(Vector2.right);
 
-                pressedTimeCooldown = pressTimeCooldownTotal;
+        //        pressedTimeCooldown = pressTimeCooldownTotal;
 
-            }
-            else if (inputSystem.PlayerActionMap.Down.IsPressed())
-            {
-                Move(Vector2.down);
-                pressedTimeCooldown = pressTimeCooldownTotal;
-
-
-            }
-            else if (inputSystem.PlayerActionMap.Up.IsPressed())
-            {
-                Move(Vector2.up);
-                pressedTimeCooldown = pressTimeCooldownTotal;
-
-            }
+        //    }
+        //    else if (inputSystem.PlayerActionMap.Down.IsPressed())
+        //    {
+        //        Move(Vector2.down);
+        //        pressedTimeCooldown = pressTimeCooldownTotal;
 
 
-            //else if (isPressed)
-            //{
-            //    Debug.Log("pressed");
-            //    var tempPos = inputSystem.PlayerActionMap.Touch.ReadValue<Vector2>();
-            //    if (tempPos != Vector2.zero)
-            //    {
-            //      Debug.Log(tempPos);
+        //    }
+        //    else if (inputSystem.PlayerActionMap.Up.IsPressed())
+        //    {
+        //        Move(Vector2.up);
+        //        pressedTimeCooldown = pressTimeCooldownTotal;
 
-            //    }
-            //    if (tempPos!= Vector2.zero)
-            //    {
-            //        lastSwipe = tempPos;
-            //        if (lastSwipe.x > touchThreshold)
-            //        {
-            //            lastSwipe.x = 1;
-
-            //        }
-            //        else if (lastSwipe.x < -touchThreshold)
-            //        {
-            //            lastSwipe.x = -1;
+        //    }
 
 
-            //        }
-            //        else
-            //        {
-            //            lastSwipe.x = 0;
-            //        }
-            //         if (lastSwipe.y > touchThreshold )
-            //        {
-
-            //            lastSwipe.y = 1;
-
-            //        }
-
-            //        else if (lastSwipe.y < -touchThreshold)
-            //        {
-
-            //            lastSwipe.y = -1;
-
-            //        }
-            //        else
-            //        {
-            //            lastSwipe.y = 0;
-
-            //        }
-            //    }
-            //    if (isRotated && lastSwipe.y>0)
-            //    {
-            //        lastSwipe.y = 0;
-            //    }
-
-            //    else if (lastSwipe.y > 0 && !isRotated)
-            //    {
-            //        isRotated = true;                   
-
-            //    }
-            //    Move(lastSwipe);
-            //    pressedTimeCooldown = pressTimeCooldownTotal;
-
-
-            //}
-        }
+            
+        //}
         if (isPressed && touchPressedTimeCooldown<=0 && lastSwipe!=Vector2.up)
         {
             Move(lastSwipe);
@@ -262,27 +201,27 @@ public class Grid : MonoBehaviour
         Move(Vector2.down,infinity:true);
 
     }
-    private void OnInputUp(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        RotatePiece();
-    }
+    //private void OnInputUp(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    //{
+    //    RotatePiece();
+    //}
 
-    private void OnInputRight(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        Move(Vector2.right);
+    //private void OnInputRight(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    //{
+    //    Move(Vector2.right);
 
-    }
+    //}
 
-    private void OnInputLeft(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        Move(Vector2.left);
+    //private void OnInputLeft(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    //{
+    //    Move(Vector2.left);
 
-    }
+    //}
 
-    private void OnInputDown(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    {
-        Move(Vector2.down);
-    }
+    //private void OnInputDown(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    //{
+    //    Move(Vector2.down);
+    //}
     public void Move(Vector2 direction,bool infinity = false)
     {
         if (direction.y>0)

@@ -73,13 +73,13 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Touch"",
-                    ""type"": ""Value"",
+                    ""name"": ""DoubleTap"",
+                    ""type"": ""Button"",
                     ""id"": ""e21ac65e-ddf2-42db-91d7-3e34d8b6e421"",
-                    ""expectedControlType"": ""Vector2"",
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""interactions"": ""MultiTap(tapDelay=0.2)"",
+                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""TouchContact"",
@@ -158,12 +158,12 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""14bbc007-4e86-4bde-94f3-8aa4a23e0cd1"",
-                    ""path"": ""<Touchscreen>/primaryTouch/delta"",
+                    ""id"": ""72832622-0d7a-4cbd-8647-317e5a4cf133"",
+                    ""path"": ""<Touchscreen>/primaryTouch/press"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Touch"",
+                    ""action"": ""DoubleTap"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -201,7 +201,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         m_PlayerActionMap_Down = m_PlayerActionMap.FindAction("Down", throwIfNotFound: true);
         m_PlayerActionMap_Up = m_PlayerActionMap.FindAction("Up", throwIfNotFound: true);
         m_PlayerActionMap_Space = m_PlayerActionMap.FindAction("Space", throwIfNotFound: true);
-        m_PlayerActionMap_Touch = m_PlayerActionMap.FindAction("Touch", throwIfNotFound: true);
+        m_PlayerActionMap_DoubleTap = m_PlayerActionMap.FindAction("DoubleTap", throwIfNotFound: true);
         m_PlayerActionMap_TouchContact = m_PlayerActionMap.FindAction("TouchContact", throwIfNotFound: true);
         m_PlayerActionMap_TouchPos = m_PlayerActionMap.FindAction("TouchPos", throwIfNotFound: true);
     }
@@ -270,7 +270,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActionMap_Down;
     private readonly InputAction m_PlayerActionMap_Up;
     private readonly InputAction m_PlayerActionMap_Space;
-    private readonly InputAction m_PlayerActionMap_Touch;
+    private readonly InputAction m_PlayerActionMap_DoubleTap;
     private readonly InputAction m_PlayerActionMap_TouchContact;
     private readonly InputAction m_PlayerActionMap_TouchPos;
     public struct PlayerActionMapActions
@@ -282,7 +282,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         public InputAction @Down => m_Wrapper.m_PlayerActionMap_Down;
         public InputAction @Up => m_Wrapper.m_PlayerActionMap_Up;
         public InputAction @Space => m_Wrapper.m_PlayerActionMap_Space;
-        public InputAction @Touch => m_Wrapper.m_PlayerActionMap_Touch;
+        public InputAction @DoubleTap => m_Wrapper.m_PlayerActionMap_DoubleTap;
         public InputAction @TouchContact => m_Wrapper.m_PlayerActionMap_TouchContact;
         public InputAction @TouchPos => m_Wrapper.m_PlayerActionMap_TouchPos;
         public InputActionMap Get() { return m_Wrapper.m_PlayerActionMap; }
@@ -309,9 +309,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Space.started += instance.OnSpace;
             @Space.performed += instance.OnSpace;
             @Space.canceled += instance.OnSpace;
-            @Touch.started += instance.OnTouch;
-            @Touch.performed += instance.OnTouch;
-            @Touch.canceled += instance.OnTouch;
+            @DoubleTap.started += instance.OnDoubleTap;
+            @DoubleTap.performed += instance.OnDoubleTap;
+            @DoubleTap.canceled += instance.OnDoubleTap;
             @TouchContact.started += instance.OnTouchContact;
             @TouchContact.performed += instance.OnTouchContact;
             @TouchContact.canceled += instance.OnTouchContact;
@@ -337,9 +337,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @Space.started -= instance.OnSpace;
             @Space.performed -= instance.OnSpace;
             @Space.canceled -= instance.OnSpace;
-            @Touch.started -= instance.OnTouch;
-            @Touch.performed -= instance.OnTouch;
-            @Touch.canceled -= instance.OnTouch;
+            @DoubleTap.started -= instance.OnDoubleTap;
+            @DoubleTap.performed -= instance.OnDoubleTap;
+            @DoubleTap.canceled -= instance.OnDoubleTap;
             @TouchContact.started -= instance.OnTouchContact;
             @TouchContact.performed -= instance.OnTouchContact;
             @TouchContact.canceled -= instance.OnTouchContact;
@@ -370,7 +370,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         void OnDown(InputAction.CallbackContext context);
         void OnUp(InputAction.CallbackContext context);
         void OnSpace(InputAction.CallbackContext context);
-        void OnTouch(InputAction.CallbackContext context);
+        void OnDoubleTap(InputAction.CallbackContext context);
         void OnTouchContact(InputAction.CallbackContext context);
         void OnTouchPos(InputAction.CallbackContext context);
     }
