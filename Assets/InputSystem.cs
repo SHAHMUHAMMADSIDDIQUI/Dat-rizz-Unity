@@ -98,6 +98,15 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""TouchHold"",
+                    ""type"": ""Button"",
+                    ""id"": ""6e563638-5a80-48f9-93a9-e35a873401f9"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""Hold"",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -181,11 +190,22 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""26b5b1f2-f7c1-4666-8a67-b7533750223e"",
-                    ""path"": ""<Touchscreen>/primaryTouch/delta"",
+                    ""path"": ""<Touchscreen>/position"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""TouchPos"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e2030cbe-ac2b-4bc1-9371-1ec3b92b8d24"",
+                    ""path"": ""<Touchscreen>/Press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TouchHold"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -204,6 +224,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         m_PlayerActionMap_DoubleTap = m_PlayerActionMap.FindAction("DoubleTap", throwIfNotFound: true);
         m_PlayerActionMap_TouchContact = m_PlayerActionMap.FindAction("TouchContact", throwIfNotFound: true);
         m_PlayerActionMap_TouchPos = m_PlayerActionMap.FindAction("TouchPos", throwIfNotFound: true);
+        m_PlayerActionMap_TouchHold = m_PlayerActionMap.FindAction("TouchHold", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -273,6 +294,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerActionMap_DoubleTap;
     private readonly InputAction m_PlayerActionMap_TouchContact;
     private readonly InputAction m_PlayerActionMap_TouchPos;
+    private readonly InputAction m_PlayerActionMap_TouchHold;
     public struct PlayerActionMapActions
     {
         private @InputSystem m_Wrapper;
@@ -285,6 +307,7 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         public InputAction @DoubleTap => m_Wrapper.m_PlayerActionMap_DoubleTap;
         public InputAction @TouchContact => m_Wrapper.m_PlayerActionMap_TouchContact;
         public InputAction @TouchPos => m_Wrapper.m_PlayerActionMap_TouchPos;
+        public InputAction @TouchHold => m_Wrapper.m_PlayerActionMap_TouchHold;
         public InputActionMap Get() { return m_Wrapper.m_PlayerActionMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -318,6 +341,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @TouchPos.started += instance.OnTouchPos;
             @TouchPos.performed += instance.OnTouchPos;
             @TouchPos.canceled += instance.OnTouchPos;
+            @TouchHold.started += instance.OnTouchHold;
+            @TouchHold.performed += instance.OnTouchHold;
+            @TouchHold.canceled += instance.OnTouchHold;
         }
 
         private void UnregisterCallbacks(IPlayerActionMapActions instance)
@@ -346,6 +372,9 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
             @TouchPos.started -= instance.OnTouchPos;
             @TouchPos.performed -= instance.OnTouchPos;
             @TouchPos.canceled -= instance.OnTouchPos;
+            @TouchHold.started -= instance.OnTouchHold;
+            @TouchHold.performed -= instance.OnTouchHold;
+            @TouchHold.canceled -= instance.OnTouchHold;
         }
 
         public void RemoveCallbacks(IPlayerActionMapActions instance)
@@ -373,5 +402,6 @@ public partial class @InputSystem: IInputActionCollection2, IDisposable
         void OnDoubleTap(InputAction.CallbackContext context);
         void OnTouchContact(InputAction.CallbackContext context);
         void OnTouchPos(InputAction.CallbackContext context);
+        void OnTouchHold(InputAction.CallbackContext context);
     }
 }

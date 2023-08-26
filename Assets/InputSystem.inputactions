@@ -76,6 +76,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "TouchHold",
+                    "type": "Button",
+                    "id": "6e563638-5a80-48f9-93a9-e35a873401f9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -159,11 +168,22 @@
                 {
                     "name": "",
                     "id": "26b5b1f2-f7c1-4666-8a67-b7533750223e",
-                    "path": "<Touchscreen>/primaryTouch/delta",
+                    "path": "<Touchscreen>/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "TouchPos",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e2030cbe-ac2b-4bc1-9371-1ec3b92b8d24",
+                    "path": "<Touchscreen>/Press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TouchHold",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

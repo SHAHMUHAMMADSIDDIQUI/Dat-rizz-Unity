@@ -11,8 +11,8 @@ using Random = UnityEngine.Random;
 public class Grid : MonoBehaviour
 {
 
-    [TextArea(30, 50)]
-    public string fen;
+    //[TextArea(30, 50)]
+    //public string fen;
     public GameObject gridTile, piece;
     public XAxis gridClass;
     public XAxis newPiece;
@@ -25,8 +25,7 @@ public class Grid : MonoBehaviour
     public InputSystem.IPlayerActionMapActions playerAction;
     bool isPaused;
     float pressedTimeCooldown, pressTimeCooldownTotal = .2f;
-    float touchPressedTimeCooldown, touchPressTimeCooldownTotal = .8f;
-    bool isPressed;
+    public List<Button> buttons = new();
     public RectTransform safeArea;
     public TextMeshProUGUI scoreTxt, highScoreTxt;
     public int score, highScore;
@@ -43,7 +42,9 @@ public class Grid : MonoBehaviour
     private void Start()
     {
         highScore = PlayerPrefs.GetInt("datrizz");
-        highScoreTxt.text = "High Score : " + highScore;
+        scoreTxt.text = score.ToString(); ;
+
+        highScoreTxt.text = highScore.ToString();
         CreateGrid();
         newPiece = null;
         Instantiate();
@@ -54,176 +55,73 @@ public class Grid : MonoBehaviour
         inputSystem.Enable();
         
         inputSystem.PlayerActionMap.Space.started += OnInputSpace;
-        inputSystem.PlayerActionMap.TouchContact.started+= ctx => { isPressed = true; };
-        inputSystem.PlayerActionMap.TouchContact.canceled+= ctx => { isPressed = false; };
-        inputSystem.PlayerActionMap.TouchPos.started += TouchPos;
-        inputSystem.PlayerActionMap.DoubleTap.performed += _ => { Move(Vector2.down, infinity: true); };
+        
+       
+        //inputSystem.PlayerActionMap.DoubleTap.performed += _ => { Move(Vector2.down, infinity: true); };
+        buttons[0].onClick.AddListener(() => { Move(Vector2.left); });
+        buttons[1].onClick.AddListener(() => { Move(Vector2.down); });
+        buttons[2].onClick.AddListener(() => { Move(Vector2.down,true); });
+        buttons[3].onClick.AddListener(() => { Move(Vector2.up); });
+        buttons[^1].onClick.AddListener(() => { Move(Vector2.right); });
+
 
     }
-    private void TouchPos(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    
+    void KeyboardInput()
     {
-        if (Time.time < lastMovedTimeForTouch + 0.2f)
+        if (pressedTimeCooldown > 0)
         {
-            return;
+            pressedTimeCooldown -= Time.deltaTime;
         }
-        lastMovedTimeForTouch = Time.time;
-        var dir = obj.ReadValue<Vector2>();
-        bool hor = false, vert = false;
-
-        if (dir.x > 0 || dir.x < 0)
+        if (pressedTimeCooldown <= 0)
         {
 
-            hor = true;
-        }
-        if (dir.y > 0 || dir.y < 0)
-        {
-            vert = true;
-        }
-        if (vert && hor)
-        {
-            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+            if (inputSystem.PlayerActionMap.Left.IsPressed())
             {
-                if (dir.x > 0)
-                {
-                    lastSwipe = Vector2.right;
-
-
-                }
-                else
-                {
-                    lastSwipe = Vector2.left;
-
-
-                }
-            }
-            else
-            {
-                if (dir.y > 0)
-                {
-                    lastSwipe = Vector2.up;
-
-
-                }
-                else
-                {
-                    lastSwipe = Vector2.down;
-
-
-                }
-            }
-        }
-        else if (vert)
-        {
-            if (dir.y > 0)
-            {
-                lastSwipe = Vector2.up;
+                Move(Vector2.left);
+                pressedTimeCooldown = pressTimeCooldownTotal;
 
             }
-            else
+            else if (inputSystem.PlayerActionMap.Right.IsPressed())
             {
-                lastSwipe = Vector2.down;
+                Move(Vector2.right);
+
+                pressedTimeCooldown = pressTimeCooldownTotal;
+
+            }
+            else if (inputSystem.PlayerActionMap.Down.IsPressed())
+            {
+                Move(Vector2.down);
+                pressedTimeCooldown = pressTimeCooldownTotal;
 
 
             }
-        }
-        else if (hor)
-        {
-            if (dir.x > 0)
+            else if (inputSystem.PlayerActionMap.Up.IsPressed())
             {
-                lastSwipe = Vector2.right;
+                Move(Vector2.up);
+                pressedTimeCooldown = pressTimeCooldownTotal;
 
             }
-            else
-            {
-                lastSwipe = Vector2.left;
 
 
-            }
+
         }
-        Debug.Log(dir);
-        Move(lastSwipe);
-
     }
     private void Update()
     {
-        //if (pressedTimeCooldown>0)
-        //{
-        //    pressedTimeCooldown -= Time.deltaTime;
-        //}
-        //if (pressedTimeCooldown <= 0)
-        //{
-
-        //    if (inputSystem.PlayerActionMap.Left.IsPressed())
-        //    {
-        //        Move(Vector2.left);
-        //        pressedTimeCooldown = pressTimeCooldownTotal;
-
-        //    }
-        //    else if (inputSystem.PlayerActionMap.Right.IsPressed())
-        //    {
-        //        Move(Vector2.right);
-
-        //        pressedTimeCooldown = pressTimeCooldownTotal;
-
-        //    }
-        //    else if (inputSystem.PlayerActionMap.Down.IsPressed())
-        //    {
-        //        Move(Vector2.down);
-        //        pressedTimeCooldown = pressTimeCooldownTotal;
-
-
-        //    }
-        //    else if (inputSystem.PlayerActionMap.Up.IsPressed())
-        //    {
-        //        Move(Vector2.up);
-        //        pressedTimeCooldown = pressTimeCooldownTotal;
-
-        //    }
-
-
-            
-        //}
-        if (isPressed && touchPressedTimeCooldown<=0 && lastSwipe!=Vector2.up)
-        {
-            Move(lastSwipe);
-            touchPressedTimeCooldown= touchPressTimeCooldownTotal;
-
-        }
-        if (touchPressedTimeCooldown > 0)
-        {
-
-            touchPressedTimeCooldown -= Time.deltaTime;
-
-        }
+        KeyboardInput(); 
     }
     private void OnInputSpace(UnityEngine.InputSystem.InputAction.CallbackContext obj)
     {
         Move(Vector2.down,infinity:true);
 
     }
-    //private void OnInputUp(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    //{
-    //    RotatePiece();
-    //}
-
-    //private void OnInputRight(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    //{
-    //    Move(Vector2.right);
-
-    //}
-
-    //private void OnInputLeft(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    //{
-    //    Move(Vector2.left);
-
-    //}
-
-    //private void OnInputDown(UnityEngine.InputSystem.InputAction.CallbackContext obj)
-    //{
-    //    Move(Vector2.down);
-    //}
     public void Move(Vector2 direction,bool infinity = false)
     {
+        if (newPiece == null)
+        {
+            return;
+        }
         if (direction.y>0)
         {
             RotatePiece();
@@ -233,7 +131,7 @@ public class Grid : MonoBehaviour
 
         if (direction.x!=0)
         {
-            bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.right *direction.x, infinity: infinity);
+            gridClass.ChangePiecePositionBy1(newPiece, Vector2.right *direction.x, infinity: infinity);
            
         }
         if (direction.y<0)
@@ -248,43 +146,41 @@ public class Grid : MonoBehaviour
         }
              
     }
-    public void SetFen()
-    {
-        fen = "";
-        for (int i = yCount - 1; i >= 0; i--)
-        {
-            for (int j = 0; j < xCount; j++)
-            {
-                if (gridClass.x[j].y[i].gameObject != null)
-                {
-                    fen += "#";
-                }
-                else
-                {
-                    fen += " .";
+    //public void SetFen()
+    //{
+    //    fen = "";
+    //    for (int i = yCount - 1; i >= 0; i--)
+    //    {
+    //        for (int j = 0; j < xCount; j++)
+    //        {
+    //            if (gridClass.x[j].y[i].gameObject != null)
+    //            {
+    //                fen += "#";
+    //            }
+    //            else
+    //            {
+    //                fen += " .";
 
-                }
+    //            }
 
-            }
+    //        }
 
-            fen += "\n";
-        }
+    //        fen += "\n";
+    //    }
 
-    }
+    //}
 
     IEnumerator ChangePositonByTime()
     {
         while (true)
         {
             yield return new WaitForSeconds(level);
-            score++;
-            scoreTxt.text = "Score : " + score;
 
             if (highScore<score)
             {
                 highScore = score;
                 PlayerPrefs.SetInt("datrizz",highScore);
-                highScoreTxt.text = "High Score : " + highScore;
+                highScoreTxt.text =  highScore.ToString();
 
             }
             while(isPaused)
@@ -301,20 +197,16 @@ public class Grid : MonoBehaviour
                     StartCoroutine(IsLayerCompleted());
                 }
             }
-            SetFen();
+            //SetFen();
         }
     }
 
     public void CreateGrid()
     {
-        //float width = gridTile.transform.localScale.x, height = gridTile.transform.localScale.y;
-        float height = safeAreaScript.GetSafeArea().yMax/(yCount+5);
-
-        Debug.Log(safeAreaScript.GetSafeArea().yMin);
+        float height = (Screen.height-400)/(yCount+5);
         piece.GetComponent<RectTransform>().sizeDelta = new Vector2(height, height);
         gridTile.GetComponent<RectTransform>().sizeDelta = new Vector2(height, height);
         changeInPosition = new Vector2(height, height);
-
         gridClass = new(xCount, yCount);
         for (int i = 0; i < gridClass.x.Length; i++)
         {
@@ -323,10 +215,7 @@ public class Grid : MonoBehaviour
 
                 Vector2 position = new Vector2((i * height -
                     xCount * height / 2) + height / 2,
-                    //safeAreaScript.GetSafeArea().yMin-(j*height));
-                   //Screen.safeArea.yMax+(j*height));
-                (j * height - yCount * height / 2) + height / 2*-3);
-                //(j * height - yCount* height / 2) + height / 2);
+                (j * height - yCount * height / 2) );
 
                 var obj= Instantiate(gridTile, safeArea);
                 obj.GetComponent<RectTransform>().anchoredPosition = position;
@@ -384,11 +273,11 @@ public class Grid : MonoBehaviour
         }
         else
         {
-            print(piece);
-            print(newGridPositon);
-            print(grid.xCount + " " + xCount);
-            print(grid.yCount + " " + yCount);
-            print("game over");
+            //print(piece);
+            //print(newGridPositon);
+            //print(grid.xCount + " " + xCount);
+            //print(grid.yCount + " " + yCount);
+            //print("game over");
             RestartGame();
         }
     }
@@ -424,10 +313,8 @@ public class Grid : MonoBehaviour
                 gridClass.AddGrid(rot, newPiece.x[0].y[0].gridPosition);
                 newPiece = rot;
             }
-           
             else
             {
-
                 gridClass.AddGrid(newPiece, newPiece.x[0].y[0].gridPosition);
             }
 
@@ -543,18 +430,18 @@ public class Grid : MonoBehaviour
 
         List<int> y = GetFilledRow();
         score+= y.Count*10;
-        scoreTxt.text = "Score : " + score;
+        scoreTxt.text = score.ToString();
         if (highScore < score)
         {
             highScore = score;
             PlayerPrefs.SetInt("datrizz", highScore);
-            highScoreTxt.text = "High Score : " + highScore;
+            highScoreTxt.text = highScore.ToString() ;
 
         }
         isPaused = true;
         if (y.Count>0)
         {
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.1f);
 
             int k = 0;
 
@@ -570,7 +457,7 @@ public class Grid : MonoBehaviour
                         obj.SetActive(!obj.activeInHierarchy);
                     }
                 }
-                yield return new WaitForSeconds(0.3f);
+                yield return new WaitForSeconds(0.1f);
             }
 
 
@@ -627,7 +514,38 @@ public class Grid : MonoBehaviour
         //IsLayerCompleted();
 
 
-
+        if (score<50)
+        {
+            level = 1;
+        }
+        else if (score < 100)
+        {
+            level = 0.8f;
+        }
+        else if (score < 150)
+        {
+            level = 0.6f;
+        }
+        else if (score < 200)
+        {
+            level = 0.5f;
+        }
+        else if (score < 250)
+        {
+            level = 0.4f;
+        }
+        else if (score < 300)
+        {
+            level = 0.3f;
+        }
+        else if (score < 350)
+        {
+            level = 0.2f;
+        }
+        else if (score < 400)
+        {
+            level = 0.1f;
+        }
 
     }
 
