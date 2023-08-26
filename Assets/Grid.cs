@@ -31,12 +31,14 @@ public class Grid : MonoBehaviour
     public int score, highScore;
 
     public SafeArea safeAreaScript;
-    Vector2 lastSwipe;
-    private float lastMovedTimeForTouch;
-
+    //Vector2 lastSwipe;
+    //private float lastMovedTimeForTouch;
+    public AudioClip gameoverClip, downClip, mathClip,stopClip;
+    AudioSource auSource;
     private void Awake()
     {
         inputSystem = new();
+        auSource =Camera.main.GetComponent<AudioSource>();
 
     }
     private void Start()
@@ -67,7 +69,14 @@ public class Grid : MonoBehaviour
 
 
     }
-    
+    private void OnDisable()
+    {
+
+        inputSystem.Disable();
+
+        inputSystem.PlayerActionMap.Space.started -= OnInputSpace;
+    }
+
     void KeyboardInput()
     {
         if (pressedTimeCooldown > 0)
@@ -123,6 +132,7 @@ public class Grid : MonoBehaviour
         {
             return;
         }
+        //auSource.PlayOneShot(downClip);
         if (direction.y>0)
         {
             RotatePiece();
@@ -142,6 +152,8 @@ public class Grid : MonoBehaviour
             if ( deadEnd)
             {
                 newPiece = null;
+                auSource.PlayOneShot(stopClip);
+
                 StartCoroutine(IsLayerCompleted());
             }
         }
@@ -177,13 +189,6 @@ public class Grid : MonoBehaviour
         {
             yield return new WaitForSeconds(level);
 
-            if (highScore<score)
-            {
-                highScore = score;
-                PlayerPrefs.SetInt("datrizz",highScore);
-                highScoreTxt.text =  highScore.ToString();
-
-            }
             while(isPaused)
             {
                 yield return null;
@@ -192,6 +197,7 @@ public class Grid : MonoBehaviour
             if (newPiece != null)
             {
                 bool deadEnd = gridClass.ChangePiecePositionBy1(newPiece, Vector2.down);
+
                 if (deadEnd)
                 {
                     newPiece = null;
@@ -279,7 +285,10 @@ public class Grid : MonoBehaviour
             //print(grid.xCount + " " + xCount);
             //print(grid.yCount + " " + yCount);
             //print("game over");
-            RestartGame();
+            auSource.PlayOneShot(gameoverClip);
+            isPaused = true;
+            Invoke("RestartGame", 1.5f);
+            //RestartGame();
         }
     }
 
@@ -430,20 +439,21 @@ public class Grid : MonoBehaviour
 
 
         List<int> y = GetFilledRow();
-        score+= y.Count*10;
-        scoreTxt.text = score.ToString();
-        if (highScore < score)
-        {
-            highScore = score;
-            PlayerPrefs.SetInt("datrizz", highScore);
-            highScoreTxt.text = highScore.ToString() ;
-
-        }
-        isPaused = true;
+       
         if (y.Count>0)
         {
-            yield return new WaitForSeconds(0.1f);
+            score += y.Count * 10;
+            scoreTxt.text = score.ToString();
+            if (highScore < score)
+            {
+                highScore = score;
+                PlayerPrefs.SetInt("datrizz", highScore);
+                highScoreTxt.text = highScore.ToString();
 
+            }
+            isPaused = true;
+            auSource.PlayOneShot(mathClip);
+            yield return new WaitForSeconds(0.1f);
             int k = 0;
 
             for (int i = 0; i < 6; i++)
@@ -568,12 +578,12 @@ public class XAxis
             {
                 if (item2.gridPosition.x >= xCount || item2.gridPosition.y >= yCount)
                 {
-                    Debug.Log("count is bigger");
+                    //Debug.Log("count is bigger");
                     return false;
                 }
                 if (GetTile(item2.gridPosition).gameObject != null)
                 {
-                    Debug.Log($"place not available = {item2.gridPosition}");
+                    //Debug.Log($"place not available = {item2.gridPosition}");
 
                     return false;
                 }
@@ -697,6 +707,7 @@ public class XAxis
     public bool ChangePiecePositionBy1(XAxis piece, Vector2 direction, bool infinity = false)
     {
         
+
         RemovePieceGo(piece);
 
         // Checking if empty space is available
@@ -743,8 +754,8 @@ public class XAxis
             }
         }
         
-        
-                  AddGrid(piece, piece.x[0].y[0].gridPosition + direction);
+
+        AddGrid(piece, piece.x[0].y[0].gridPosition + direction);
             if (infinity)
             {
                 bool deadEnd= ChangePiecePositionBy1(piece, direction, infinity: true);

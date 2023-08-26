@@ -10,8 +10,15 @@ public class Move : MonoBehaviour, IPointerDownHandler,IPointerUpHandler
     public Grid grid;
     float threshold = 0.1f;
     bool pressed = false;
+    public bool on;
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (on)
+        {
+            grid.gameObject.SetActive(true);
+            transform.parent.gameObject.SetActive(false);
+            return;
+        }
         StartCoroutine(Press());
     }
 
