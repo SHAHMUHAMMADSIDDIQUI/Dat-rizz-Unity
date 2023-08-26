@@ -58,11 +58,12 @@ public class Grid : MonoBehaviour
         
        
         //inputSystem.PlayerActionMap.DoubleTap.performed += _ => { Move(Vector2.down, infinity: true); };
-        buttons[0].onClick.AddListener(() => { Move(Vector2.left); });
-        buttons[1].onClick.AddListener(() => { Move(Vector2.down); });
-        buttons[2].onClick.AddListener(() => { Move(Vector2.down,true); });
-        buttons[3].onClick.AddListener(() => { Move(Vector2.up); });
-        buttons[^1].onClick.AddListener(() => { Move(Vector2.right); });
+        //buttons[0].onClick.AddListener(() => { Move(Vector2.left); });
+        //buttons[1].onClick.AddListener(() => { Move(Vector2.down); });
+        buttons[0].onClick.AddListener(() => { Move(Vector2.down,true); });
+        //buttons[3].onClick.AddListener(() => { Move(Vector2.up); });
+        //buttons[^1].onClick.AddListener(() => { Move(Vector2.right); });
+        
 
 
     }
